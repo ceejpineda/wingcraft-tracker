@@ -52,13 +52,13 @@ const KanbanBoard = ({ data, isLoading, mutate }: KanbanBoardProps) => {
 
   useEffect(() => {
     if (data) {
-      const pending = data.filter((order:any) => order.status === 'pending');
-      const moulding = data.filter((order:any) => order.status === 'moulding');
-      const putty = data.filter((order:any) => order.status === 'putty');
-      const artist = data.filter((order:any) => order.status === 'artist');
-      const detail = data.filter((order:any) => order.status === 'detail');
-      const quality = data.filter((order:any) => order.status === 'quality');
-      const shipped = data.filter((order:any) => order.status === 'shipped');
+      const pending = data.filter((order:any) => order.status === 'pending').map((order, index) => ({ ...order, index }));
+      const moulding = data.filter((order:any) => order.status === 'moulding').map((order, index) => ({ ...order, index }));
+      const putty = data.filter((order:any) => order.status === 'putty').map((order, index) => ({ ...order, index }));
+      const artist = data.filter((order:any) => order.status === 'artist').map((order, index) => ({ ...order, index }));
+      const detail = data.filter((order:any) => order.status === 'detail').map((order, index) => ({ ...order, index }));
+      const quality = data.filter((order:any) => order.status === 'quality').map((order, index) => ({ ...order, index }));
+      const shipped = data.filter((order:any) => order.status === 'shipped').map((order, index) => ({ ...order, index }));
 
       setOrders({ pending, moulding, putty, artist, detail, quality, shipped });
     }
@@ -68,11 +68,11 @@ const KanbanBoard = ({ data, isLoading, mutate }: KanbanBoardProps) => {
     const { source, destination } = result;
   
     if (!destination) return;
+    
     if (source.droppableId === destination.droppableId) {
       const sourceItems = [...orders[source.droppableId]];
     
       const [draggedItem] = sourceItems.splice(source.index, 1);
-      
       sourceItems.splice(destination.index, 0, draggedItem);
       
       const updatedItems = sourceItems.map((item, index) => ({
@@ -94,13 +94,16 @@ const KanbanBoard = ({ data, isLoading, mutate }: KanbanBoardProps) => {
       const sourceColumn = source.droppableId
       const destinationColumn = destination.droppableId
 
-      const sourceItems = Array.isArray(orders[sourceColumn]) ? [...orders[sourceColumn]] : [];
-      const destinationItems = Array.isArray(orders[destinationColumn]) ? [...orders[destinationColumn]] : [];
+      const sourceItems = [...orders[sourceColumn]];
+      const destinationItems = [...orders[destinationColumn]];
 
-      const removed = orders[sourceColumn].find((order: any) => order.index === source.index);
+      const [draggedItem] = sourceItems.splice(source.index, 1);
+      
+      const updatedDraggedItem = { ...draggedItem, status: destinationColumn };
+      destinationItems.splice(destination.index, 0, updatedDraggedItem);
 
-      const updatedSourceItems = sourceItems.filter((order: any) => order.index !== source.index);
-      const updatedDestinationItems = [...destinationItems, { ...removed, status: destinationColumn }];
+      const updatedSourceItems = sourceItems.map((item, index) => ({ ...item, index }));
+      const updatedDestinationItems = destinationItems.map((item, index) => ({ ...item, index }));
 
       setOrders({
         ...orders,

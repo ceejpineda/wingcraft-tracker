@@ -1,5 +1,5 @@
 const serverConfig = {
-  url: 'http://localhost:3000'
+  url: 'http://192.168.100.17:3000'
 }
 
 export default serverConfig

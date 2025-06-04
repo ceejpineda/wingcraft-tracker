@@ -1,33 +1,14 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import clsx from "clsx";
-import { Droppable, Draggable } from "@hello-pangea/dnd";
+import { Droppable } from "@hello-pangea/dnd";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-import apiClient from "@/services/apiClient";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
 import { useDropzone } from "react-dropzone";
-import serverConfig from "@/services/config/server.config";
-import Slider from "react-slick";
+import apiClient from "@/services/apiClient";
+import KanbanCard from "./KanbanCard";
+import ImageGallery from "./ImageGallery";
+import ImageUploadDialog from "./ImageUploadDialog";
 
 interface KanbanColumnProps {
   status: string;
@@ -39,14 +20,6 @@ interface KanbanColumnProps {
   isLoading?: boolean;
   mutate: () => void;
 }
-
-let settings = {
-  dots: true,
-  infinite: true,
-  speed: 500,
-  slidesToShow: 1,
-  slidesToScroll: 1,
-};
 
 const KanbanColumn = ({
   status,
@@ -82,7 +55,7 @@ const KanbanColumn = ({
     // Upload the pics to the server
     const formData = new FormData();
     acceptedFiles.forEach(file => {
-      formData.append('pics', file);
+      formData.append('pictures', file);
     });
   
     // Log formData entries
@@ -98,10 +71,12 @@ const KanbanColumn = ({
       .then(response => {
         console.log("Upload successful", response);
         mutate();
-        console.log(items)
-        const order = items.find((item) => item._id === selectedOrder);
-        if (!order) return;    
-        setOrderPics(order.pics);
+        // Refresh pictures using the API endpoint
+        fetchOrderPictures(selectedOrder);
+        toast({
+          title: "Success",
+          description: "Pictures uploaded successfully",
+        });
       })
       .catch(error => {
         console.error("Upload failed", error);
@@ -116,6 +91,11 @@ const KanbanColumn = ({
   };
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
+
+  // Helper function to handle files added from different sources
+  const handleFilesAdded = (files: File[]) => {
+    onDrop(files);
+  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -144,10 +124,47 @@ const KanbanColumn = ({
 
     setSelectedOrder(order._id);
 
-    setOrderPics(order.pics);
+    // Use the API endpoint to fetch pictures instead of relying on order.pics
+    fetchOrderPictures(order._id);
     console.log("Order pics:", order.pics);
 
     setIsDialogOpen(true);
+  };
+
+  // Add function to delete individual pictures
+  const handleDeletePicture = async (filename: string) => {
+    if (!selectedOrder) return;
+    
+    try {
+      await apiClient.delete(`/api/orders/${selectedOrder}/pics/${filename}`);
+      toast({
+        title: "Success",
+        description: "Picture deleted successfully",
+      });
+      
+      // Refresh the pictures list
+      const response = await apiClient.get(`/api/orders/${selectedOrder}/pics`);
+      setOrderPics(response.data.pictures?.map((pic: any) => pic.filename) || []);
+      mutate(); // Also refresh the main data
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete picture",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Add function to fetch pictures for an order
+  const fetchOrderPictures = async (orderId: string) => {
+    try {
+      const response = await apiClient.get(`/api/orders/${orderId}/pics`);
+      // The API returns { orderId, pictures: [...] }, so we need to access response.data.pictures
+      setOrderPics(response.data.pictures?.map((pic: any) => pic.filename) || []);
+    } catch (error) {
+      console.error("Failed to fetch pictures:", error);
+      setOrderPics([]);
+    }
   };
 
   return isLoading ? (
@@ -198,171 +215,35 @@ const KanbanColumn = ({
               className="flex-1 min-h-[calc(100vh-32vh)]"
             >
               {items.map((item: any) => (
-                <Draggable
+                <KanbanCard
                   key={item._id}
-                  draggableId={item._id}
-                  index={item.index}
-                >
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      className="bg-white p-4 py-4 mb-2 rounded shadow relative"
-                    >
-                      <div className="flex justify-between">
-                        <div>
-                          <p className="font-bold">{item.name}</p>
-                          <p className="text-xs text-gray-500">
-                            Order Date:{" "}
-                            {new Date(item.createdAt).toLocaleDateString("en-US", {
-                              month: "long",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          onClick={() => handleClicked(item._id)}
-                          className="bg-blue-500 hover:bg-blue-700 text-white"
-                        >
-                          View Images
-                        </Button>
-                      </div>
-                      <div className="border-t mt-2 pt-2">
-                        <p>Order Summary:</p>
-                        <ul className="list-disc list-inside">
-                          {item.planes.map((plane: any) => (
-                            <li key={plane._id}>
-                              {plane.name} -{" "}
-                              <span className="font-bold text-xs">
-                                {plane.quantity} pc/s
-                              </span>{" "}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="border-t mt-2 pt-2">
-                        <p className="text-xs text-gray-500">
-                          Estimated time due:{" "}
-                          {new Date(
-                            new Date(item.createdAt).getTime() +
-                              60 * 24 * 60 * 60 * 1000
-                          ).toLocaleDateString("en-US", {
-                            month: "long",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </p>
-                        <p
-                          className={`text-xs font-bold ${
-                            new Date() >
-                            new Date(
-                              new Date(item.createdAt).getTime() +
-                                60 * 24 * 60 * 60 * 1000
-                            )
-                              ? "text-red-500"
-                              : "text-green-500"
-                          }`}
-                        >
-                          {new Date() >
-                          new Date(
-                            new Date(item.createdAt).getTime() +
-                              60 * 24 * 60 * 60 * 1000
-                          )
-                            ? "Overdue"
-                            : "On Time"}
-                        </p>
-                      </div>
-
-                      <div className="absolute bottom-4 right-4">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-red-500 hover:text-red-700 hover:bg-red-100 z-999"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will
-                                permanently delete the order.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                className="bg-red-500 hover:bg-red-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(item._id);
-                                }}
-                                disabled={isDeleting === item._id}
-                              >
-                                {isDeleting === item._id
-                                  ? "Deleting..."
-                                  : "Delete"}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  )}
-                </Draggable>
+                  item={item}
+                  handleClicked={handleClicked}
+                  handleDelete={handleDelete}
+                  isDeleting={isDeleting}
+                />
               ))}
               {provided.placeholder}
             </div>
           )}
         </Droppable>
       </CardContent>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl h-[80vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-4">
-              Order Pictures
-              <Button onClick={() => setIsDropzoneOpen(true)}>
-                Upload Pictures
-              </Button>
-            </DialogTitle>
-            <DialogDescription>
-              <div className="w-full overflow-hidden">
-                <Slider className="h-full w-full overflow-hidden" {...settings}>
-                  {orderPics.length > 0 ? (
-                    orderPics.map((pic, index) => (
-                      <div key={index} className="h-full w-full overflow-hidden">
-                        <img src={`${serverConfig.url}/${pic}`} alt={`Order pic ${index + 1}`} className="h-full w-full object-contain" onContextMenu={(e) => e.stopPropagation()} />
-                      </div>
-                    ))
-                  ) : (
-                    [<div key='x'>No pictures available</div>]
-                  )}
-                </Slider>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-        </Dialog>
+      
+      <ImageGallery
+        isDialogOpen={isDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+        orderPics={orderPics}
+        handleDeletePicture={handleDeletePicture}
+        setIsDropzoneOpen={setIsDropzoneOpen}
+      />
 
-        <Dialog open={isDropzoneOpen} onOpenChange={setIsDropzoneOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Upload Pictures</DialogTitle>
-              <DialogDescription>
-                <div {...getRootProps({ className: 'dropzone' })} className="border-dashed border-2 border-gray-300 p-4 mb-4">
-                  <input {...getInputProps()} />
-                  <p>Drag 'n' drop some files here, or click to select files</p>
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
+      <ImageUploadDialog
+        isDropzoneOpen={isDropzoneOpen}
+        setIsDropzoneOpen={setIsDropzoneOpen}
+        getRootProps={getRootProps}
+        getInputProps={getInputProps}
+        onFilesAdded={handleFilesAdded}
+      />
     </Card>
   );
 };
