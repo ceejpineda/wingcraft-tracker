@@ -4,6 +4,7 @@ import { DragDropContext } from '@hello-pangea/dnd'
 import apiClient from '@/services/apiClient'
 
 const columns = [
+  { status: 'stock', color: 'teal', 'icon': '📦', label: 'In Stock' },
   { status: 'pending', color: 'red', 'icon': '🕙', label: 'Pending' },
   { status: 'moulding', color: 'yellow', 'icon': '🛠️', label: 'Moulding' },
   { status: 'putty', color: 'green', 'icon': '🎨', label: 'Putty and Spray' },
@@ -37,9 +38,10 @@ interface KanbanBoardProps {
   data: Order[];
   isLoading: boolean;
   mutate: () => void;
+  handleMarkAsDone?: (id: string) => void;
 }
 
-const KanbanBoard = ({ data, isLoading, mutate }: KanbanBoardProps) => {
+const KanbanBoard = ({ data, isLoading, mutate, handleMarkAsDone }: KanbanBoardProps) => {
   const [orders, setOrders] = useState<any>({
     pending: [],
     moulding: [],
@@ -47,8 +49,17 @@ const KanbanBoard = ({ data, isLoading, mutate }: KanbanBoardProps) => {
     artist: [],
     detail: [],
     quality: [],
+    stock: [],
     shipped: [],
   })
+  const [collapsedColumns, setCollapsedColumns] = useState<Record<string, boolean>>({})
+
+  const toggleColumn = (status: string) => {
+    setCollapsedColumns(prev => ({
+      ...prev,
+      [status]: !prev[status]
+    }))
+  }
 
   useEffect(() => {
     if (data) {
@@ -58,9 +69,10 @@ const KanbanBoard = ({ data, isLoading, mutate }: KanbanBoardProps) => {
       const artist = data.filter((order:any) => order.status === 'artist').map((order, index) => ({ ...order, index }));
       const detail = data.filter((order:any) => order.status === 'detail').map((order, index) => ({ ...order, index }));
       const quality = data.filter((order:any) => order.status === 'quality').map((order, index) => ({ ...order, index }));
+      const stock = data.filter((order:any) => order.status === 'stock').map((order, index) => ({ ...order, index }));
       const shipped = data.filter((order:any) => order.status === 'shipped').map((order, index) => ({ ...order, index }));
 
-      setOrders({ pending, moulding, putty, artist, detail, quality, shipped });
+      setOrders({ pending, moulding, putty, artist, detail, quality, stock, shipped });
     }
   }, [data]);
 
@@ -122,8 +134,7 @@ const KanbanBoard = ({ data, isLoading, mutate }: KanbanBoardProps) => {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <h1 className="text-lg font-bold mb-5">Total Orders: {data ? data.length : 0}</h1>
-      <div className="kanban-board flex space-x-4">
+      <div className="kanban-board flex space-x-1 sm:space-x-2 overflow-x-auto pb-4">
         {columns.map((column, index) => (
           <KanbanColumn
             key={index}
@@ -135,6 +146,9 @@ const KanbanBoard = ({ data, isLoading, mutate }: KanbanBoardProps) => {
             items={orders[column.status] || []}
             isLoading={isLoading}
             mutate={mutate}
+            isCollapsed={collapsedColumns[column.status] || false}
+            onToggleCollapse={() => toggleColumn(column.status)}
+            handleMarkAsDone={handleMarkAsDone}
           />
         ))}
       </div>

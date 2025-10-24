@@ -19,6 +19,9 @@ interface KanbanColumnProps {
   items: { _id: string; index: number; name: string; pics: string[] }[];
   isLoading?: boolean;
   mutate: () => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  handleMarkAsDone?: (id: string) => void;
 }
 
 const KanbanColumn = ({
@@ -30,6 +33,9 @@ const KanbanColumn = ({
   icon,
   label,
   mutate,
+  isCollapsed,
+  onToggleCollapse,
+  handleMarkAsDone,
 }: KanbanColumnProps) => {
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -167,46 +173,96 @@ const KanbanColumn = ({
     }
   };
 
+  // Collapsed view
+  if (isCollapsed) {
+    return (
+      <div
+        onClick={onToggleCollapse}
+        className={clsx(
+          "cursor-pointer rounded-lg shadow-md hover:shadow-lg transition-shadow border-2 flex items-center justify-center",
+          `bg-${color}-100`,
+          `hover:bg-${color}-200`,
+          `border-${color}-300`
+        )}
+        style={{ 
+          width: '48px',
+          minWidth: '48px',
+          writingMode: 'vertical-rl',
+          textOrientation: 'mixed'
+        }}
+        title={`${label} - ${count} orders (click to expand)`}
+      >
+        <div className="py-4 flex flex-col items-center gap-2">
+          <span className="text-lg">{icon}</span>
+          <span className="font-semibold text-sm whitespace-nowrap">{label}</span>
+          <span className={clsx("text-xs px-2 py-1 rounded-full font-bold", `bg-${color}-300`)}>
+            {count}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return isLoading ? (
-    <Card className="flex-1 min-w-[350px] flex flex-col bg-gray-100 rounded-lg shadow-md m-0">
+    <Card className="flex-1 min-w-[280px] sm:min-w-[320px] md:min-w-[350px] w-[280px] sm:w-[320px] md:w-auto flex flex-col bg-gray-100 rounded-lg shadow-md m-0">
       <CardHeader
         className={clsx(
           `bg-${color}-100`,
           `hover:bg-${color}-200`,
           "font-bold",
-          "text-lg",
-          "border-b-2"
+          "text-base sm:text-lg",
+          "border-b-2",
+          "py-3 sm:py-4",
+          "cursor-pointer"
         )}
+        onClick={onToggleCollapse}
       >
-        <h2>
+        <h2 className="text-sm sm:text-base">
           {icon} {label}
         </h2>
       </CardHeader>
-      <CardContent className="pt-5">
+      <CardContent className="pt-3 sm:pt-5">
         <div className="flex-1">
-          <p>Loading...</p>
+          <p className="text-sm">Loading...</p>
         </div>
       </CardContent>
     </Card>
   ) : (
-    <Card className="flex-1 min-w-[350px] flex flex-col bg-gray-100 rounded-lg shadow-md m-0">
+    <Card className="flex-1 min-w-[280px] sm:min-w-[320px] md:min-w-[350px] w-[280px] sm:w-[320px] md:w-auto flex flex-col bg-gray-100 rounded-lg shadow-md m-0">
       <CardHeader
         className={clsx(
           `bg-${color}-100`,
           `hover:bg-${color}-200`,
           "font-bold",
-          "text-lg",
-          "border-b-2"
+          "text-base sm:text-lg",
+          "border-b-2",
+          "py-3 sm:py-4",
+          "cursor-pointer"
         )}
+        onClick={onToggleCollapse}
+        title="Click to collapse"
       >
-        <div className="flex flex-col gap-3">
-          <h2>
-            {icon} {label}
-          </h2>
-          <p className="text-xs font-light">{count} Orders</p>
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-sm sm:text-base">
+              {icon} {label}
+            </h2>
+            <p className="text-xs font-light">{count} Orders</p>
+          </div>
+          <button
+            className="text-gray-600 hover:text-gray-800 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleCollapse();
+            }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
         </div>
       </CardHeader>
-      <CardContent className="pt-5 min-h-[calc(100vh-26vh)] h-[calc(100vh-26vh)]  overflow-y-scroll">
+      <CardContent className="pt-3 sm:pt-5 min-h-[calc(100vh-30vh)] sm:min-h-[calc(100vh-26vh)] h-[calc(100vh-30vh)] sm:h-[calc(100vh-26vh)] overflow-y-scroll">
         <Droppable droppableId={status}>
           {(provided) => (
             <div
@@ -220,6 +276,8 @@ const KanbanColumn = ({
                   item={item}
                   handleClicked={handleClicked}
                   handleDelete={handleDelete}
+                  handleUpdate={mutate}
+                  handleMarkAsDone={handleMarkAsDone}
                   isDeleting={isDeleting}
                 />
               ))}

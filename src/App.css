@@ -1,0 +1,60 @@
+/* Mobile-friendly scrollbar styles */
+.kanban-board {
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #cbd5e1 #f1f5f9; /* Firefox */
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.kanban-board::-webkit-scrollbar {
+  height: 8px;
+}
+
+.kanban-board::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Hide scrollbar on mobile but keep functionality */
+@media (max-width: 640px) {
+  .kanban-board::-webkit-scrollbar {
+    height: 4px;
+  }
+}
+
+/* Ensure touch targets are at least 44x44 pixels (Apple HIG) */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent text selection during drag on mobile */
+.kanban-board * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* But allow text selection in inputs and text areas */
+input, textarea, [contenteditable] {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+

@@ -25,7 +25,8 @@ const DeleteConfirmationDialog = ({ itemId, handleDelete, isDeleting }: DeleteCo
         <Button
           variant="ghost"
           size="icon"
-          className="text-red-500 hover:text-red-700 hover:bg-red-100 z-999"
+          className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50 z-999"
+          title="Delete Order"
         >
           <Trash2 className="h-4 w-4" />
         </Button>

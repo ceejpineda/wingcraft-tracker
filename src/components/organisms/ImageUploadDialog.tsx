@@ -183,20 +183,20 @@ const ImageUploadDialog = ({
     };
   }, [isDropzoneOpen, onFilesAdded]);
 
-  return (
-    <Dialog open={isDropzoneOpen} onOpenChange={setIsDropzoneOpen}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Upload Pictures
-          </DialogTitle>
-          <DialogDescription>
-            Choose from multiple upload methods below
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="space-y-6">
+    return (
+      <Dialog open={isDropzoneOpen} onOpenChange={setIsDropzoneOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
+              Upload Pictures
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              Choose from multiple upload methods below
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 sm:space-y-6">
           {/* File Drop Zone */}
           <div className="space-y-2">
             <h3 className="text-sm font-medium flex items-center gap-2">
@@ -205,13 +205,13 @@ const ImageUploadDialog = ({
             </h3>
             <div 
               {...getRootProps({ className: 'dropzone' })} 
-              className="border-dashed border-2 border-gray-300 hover:border-gray-400 p-8 rounded-lg cursor-pointer transition-colors bg-gray-50 hover:bg-gray-100"
+              className="border-dashed border-2 border-gray-300 hover:border-gray-400 p-4 sm:p-8 rounded-lg cursor-pointer transition-colors bg-gray-50 hover:bg-gray-100"
             >
               <input {...getInputProps()} />
               <div className="text-center">
-                <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-lg font-medium">Drop images here, or click to browse</p>
-                <p className="text-sm text-gray-500 mt-1">Supports: JPEG, PNG, GIF, WebP (max 10MB each)</p>
+                <Upload className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-gray-400 mb-2 sm:mb-4" />
+                <p className="text-sm sm:text-lg font-medium">Drop images here, or click to browse</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">Supports: JPEG, PNG, GIF, WebP (max 10MB each)</p>
               </div>
             </div>
           </div>
@@ -222,18 +222,18 @@ const ImageUploadDialog = ({
               <Link className="h-4 w-4" />
               Upload from URL
             </h3>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 placeholder="Paste image URL here..."
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleUrlUpload()}
-                className="flex-1"
+                className="flex-1 text-sm"
               />
               <Button 
                 onClick={() => handleUrlUpload()}
                 disabled={isLoadingUrl}
-                className="px-6"
+                className="px-4 sm:px-6 w-full sm:w-auto"
               >
                 {isLoadingUrl ? "Loading..." : "Upload"}
               </Button>
@@ -248,10 +248,10 @@ const ImageUploadDialog = ({
             </h3>
             <div 
               ref={pasteAreaRef}
-              className="border-2 border-dashed border-blue-300 bg-blue-50 p-6 rounded-lg text-center"
+              className="border-2 border-dashed border-blue-300 bg-blue-50 p-4 sm:p-6 rounded-lg text-center"
             >
-              <Clipboard className="h-8 w-8 mx-auto text-blue-500 mb-2" />
-              <p className="text-sm font-medium text-blue-700">Press Ctrl+V (or Cmd+V) to paste images</p>
+              <Clipboard className="h-6 w-6 sm:h-8 sm:w-8 mx-auto text-blue-500 mb-2" />
+              <p className="text-xs sm:text-sm font-medium text-blue-700">Press Ctrl+V (or Cmd+V) to paste images</p>
               <p className="text-xs text-blue-600 mt-1">Supports images copied from other websites or screenshot tools</p>
             </div>
           </div>

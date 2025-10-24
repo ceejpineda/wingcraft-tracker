@@ -41,13 +41,13 @@ const ImageGallery = ({
   return (
     <>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-6xl h-[90vh] overflow-hidden">
-          <DialogHeader className="pb-4">
-            <DialogTitle className="flex items-center justify-between">
-              <span className="text-xl font-semibold">Order Pictures</span>
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-6xl h-[90vh] overflow-hidden p-4 sm:p-6">
+          <DialogHeader className="pb-3 sm:pb-4 pr-10 sm:pr-12">
+            <DialogTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+              <span className="text-lg sm:text-xl font-semibold flex-1">Order Pictures</span>
               <Button 
                 onClick={() => setIsDropzoneOpen(true)}
-                className="bg-blue-500 hover:bg-blue-600"
+                className="bg-blue-500 hover:bg-blue-600 text-sm w-full sm:w-auto sm:mr-4"
               >
                 Upload Pictures
               </Button>
@@ -56,7 +56,7 @@ const ImageGallery = ({
           <DialogDescription className="h-full">
             <div className="w-full h-full">
               {orderPics.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[70vh] overflow-y-auto p-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 max-h-[70vh] overflow-y-auto p-1 sm:p-2">
                   {orderPics.map((pic, index) => (
                     <div key={index} className="relative group border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-white">
                       <div className="aspect-square relative">
